@@ -19,6 +19,9 @@ const KAVACH_SAFETY_SWEEP_SHEETS_PER_RUN = 2;
 const KAVACH_ONCHANGE_EDIT_FALLBACK_WINDOW_MS = 90 * 1000;
 var KAVACH_SPREADSHEET_ID = "1Bg4BFnfQeZHHY1VpXGPNNWJLAYH_WX3dPTWZCxSqaoA";
 
+/* The only tabs treated as month data. Compared upper-cased and trimmed. */
+const KAVACH_MONTH_SHEETS = ["AUG", "JULY", "JUNE", "MAY"];
+
 /* These five are `var` on purpose: the setup page can replace them at the start
    of a request so one deployment can serve any spreadsheet. */
 var KAVACH_DASHBOARD_TITLE = "NR2 Train Movements Dashboard";
@@ -890,6 +893,11 @@ function kavachMonthSheetForDate_(ss, date) {
     Utilities.formatDate(date, tz, "MMMM-yy").toUpperCase(),
     Utilities.formatDate(date, tz, "MMM-yyyy").toUpperCase(),
     Utilities.formatDate(date, tz, "MMMM-yyyy").toUpperCase(),
+    /* This book names tabs bare - AUG, JULY - so match those too. A bare name
+       carries no year, so it resolves regardless of one; fine while the book
+       holds a single year, and the suffixed forms above still take priority. */
+    Utilities.formatDate(date, tz, "MMM").toUpperCase(),
+    Utilities.formatDate(date, tz, "MMMM").toUpperCase(),
   ];
   const sheets = ss.getSheets().filter((sheet) => isKavachMonthSheet_(sheet.getName()));
   let hit = null;
@@ -3193,8 +3201,10 @@ function isKavachMonthSheet_(name) {
   if (text === KAVACH_CHANGE_LOG_SHEET.toUpperCase() || text === KAVACH_REASON_MASTER_SHEET.toUpperCase()) {
     return false;
   }
-  /* Year optional: NR2 names its tabs plainly (AUG, JULY) not AUG-26. */
-  return /^(JAN|JANUARY|FEB|FEBRUARY|MAR|MARCH|APR|APRIL|MAY|JUN|JUNE|JUL|JULY|AUG|AUGUST|SEP|SEPT|SEPTEMBER|OCT|OCTOBER|NOV|NOVEMBER|DEC|DECEMBER)([\s_-]*(\d{2}|\d{4}))?$/.test(text);
+  /* Explicit allowlist, not a pattern: this book carries plenty of other
+     tabs (GPRS, TAG_MISS, STATION HEALTH, Loco details, NR2, WR1...) that
+     must never be scanned. Add the next month here as the sheet grows. */
+  return KAVACH_MONTH_SHEETS.indexOf(text) >= 0;
 }
 
 function activeUserEmail_() {
