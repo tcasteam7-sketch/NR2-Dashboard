@@ -2992,8 +2992,10 @@ function editActionForRange_(sheet, range, row) {
 
 function findKavachDateColumn_(sheet) {
   const lastColumn = Math.max(sheet.getLastColumn(), 1);
-  const row2 = sheet.getRange(2, 1, 1, lastColumn).getValues()[0];
-  const row3 = sheet.getRange(3, 1, 1, lastColumn).getValues()[0];
+  /* Must follow the configured layout, not literal rows 2/3: on a book whose
+     header block sits higher, row 3 is already data and the header is missed. */
+  const row2 = sheet.getRange(KAVACH_HEADER_ROW, 1, 1, lastColumn).getValues()[0];
+  const row3 = sheet.getRange(KAVACH_SUB_HEADER_ROW, 1, 1, lastColumn).getValues()[0];
   for (let index = 0; index < lastColumn; index += 1) {
     const text = normalizeHeaderText_(`${row2[index] || ""} ${row3[index] || ""}`);
     if (text === "DATE") {
@@ -3100,8 +3102,10 @@ function kavachSafetySweep() {
 
 function reasonDropdownTargets_(sheet) {
   const lastColumn = Math.max(sheet.getLastColumn(), 1);
-  const row2 = sheet.getRange(2, 1, 1, lastColumn).getValues()[0];
-  const row3 = sheet.getRange(3, 1, 1, lastColumn).getValues()[0];
+  /* Must follow the configured layout, not literal rows 2/3: on a book whose
+     header block sits higher, row 3 is already data and the header is missed. */
+  const row2 = sheet.getRange(KAVACH_HEADER_ROW, 1, 1, lastColumn).getValues()[0];
+  const row3 = sheet.getRange(KAVACH_SUB_HEADER_ROW, 1, 1, lastColumn).getValues()[0];
   let modeReasonColumn = null;
   let undesirableReasonColumn = null;
   let desirableReasonColumn = null;
