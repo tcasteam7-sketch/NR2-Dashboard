@@ -1,0 +1,9 @@
+# Normalise to LF in the repo; check out native.
+* text=auto
+
+# Apps Script sources stay LF everywhere — they get pasted into the
+# Apps Script editor, which does not want CRLF.
+*.gs   text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md   text eol=lf

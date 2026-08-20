@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      :root {
+        --page: #f2f7f6; --card: #fff; --ink: #14303a; --ink-2: #4a6570; --muted: #8aa0a8;
+        --line: #e4ecec; --band-1: #0d3b3f; --band-2: #14605e; --green: #0f8a3c; --crimson: #d03b3b;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0 0 40px; background: var(--page); color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+      .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+      .banner { margin: 18px auto 0; max-width: 1000px; border-radius: 10px; overflow: hidden;
+        background: linear-gradient(100deg, var(--band-1), var(--band-2)); color: #fff; }
+      .banner-inner { display: flex; align-items: center; gap: 16px; padding: 16px 22px 18px; }
+      .banner h1 { margin: 0; font-size: 22px; font-weight: 700; }
+      .banner .sub { margin-top: 3px; font-size: 12.5px; color: rgba(255,255,255,0.78); }
+      .banner .spacer { flex: 1; }
+      .stripe { height: 5px; display: flex; }
+      .stripe i { flex: 1; }
+      .stripe i:nth-child(1) { background: #0f6f77; }
+      .stripe i:nth-child(2) { background: #f0b323; }
+      .stripe i:nth-child(3) { background: #c0392b; }
+      .card { background: var(--card); border-radius: 10px; padding: 18px 20px 22px; margin-top: 18px;
+        box-shadow: 0 1px 2px rgba(20,48,58,0.06); }
+      .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 600; }
+      .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field span { font-size: 11px; color: var(--ink-2); font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.04em; }
+      input, select { font: inherit; font-size: 13px; color: var(--ink); background: #fff;
+        border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+      input:focus, select:focus { outline: 2px solid var(--band-2); outline-offset: 1px; }
+      .grow { flex: 1; min-width: 320px; }
+      .grow input { width: 100%; }
+      .btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line);
+        border-radius: 8px; background: #fff; color: var(--ink); padding: 9px 18px; cursor: pointer;
+        text-decoration: none; display: inline-block; }
+      .btn:hover { border-color: var(--band-2); color: var(--band-2); }
+      .btn.primary { background: var(--band-2); border-color: var(--band-2); color: #fff; }
+      .btn.save { background: var(--green); border-color: var(--green); color: #fff; }
+      .group { margin-top: 18px; }
+      .group h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--ink-2);
+        text-transform: uppercase; letter-spacing: 0.05em; }
+      .maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+      .map { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+      .map label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+      .map input { width: 100%; text-transform: uppercase; }
+      .map .hint { font-size: 10.5px; color: var(--muted); margin-top: 4px; min-height: 12px; }
+      .note { font-size: 12.5px; color: var(--ink-2); margin-bottom: 12px; }
+      .warn { padding: 10px 14px; border-radius: 8px; background: #fff8e6; border: 1px solid #f3e0ac;
+        color: #6b5313; font-size: 12.5px; margin-bottom: 12px; }
+      .ok { padding: 10px 14px; border-radius: 8px; background: #eaf6ec; border: 1px solid #b9dfc2;
+        color: #17552b; font-size: 12.5px; margin-bottom: 12px; }
+      .bad { padding: 10px 14px; border-radius: 8px; background: #fdecec; border: 1px solid #f0bcbc;
+        color: #7a1f1f; font-size: 12.5px; margin-bottom: 12px; }
+      .table-scroll { overflow-x: auto; max-height: 300px; overflow-y: auto; }
+      table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+      th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+      th { position: sticky; top: 0; background: #f7fafa; color: var(--ink-2); font-size: 11px;
+        text-transform: uppercase; letter-spacing: 0.04em; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="banner-inner">
+        <div>
+          <h1>Dashboard setup</h1>
+          <div class="sub">Point this dashboard at a spreadsheet and map its columns</div>
+        </div>
+        <div class="spacer"></div>
+        <a class="btn" id="back" href="#">Back to dashboard</a>
+      </div>
+      <div class="stripe"><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="wrap">
+      <div class="card">
+        <h2>1. Choose the spreadsheet</h2>
+        <div id="status"></div>
+        <div class="row">
+          <label class="field grow"><span>Google Sheets link</span>
+            <input type="text" id="url" placeholder="https://docs.google.com/spreadsheets/d/..." /></label>
+          <label class="field"><span>Section name</span>
+            <input type="text" id="section" placeholder="VR-ST section operational monitoring" /></label>
+          <button class="btn primary" id="detect" type="button">Detect columns</button>
+        </div>
+        <div class="note" style="margin-top:10px">
+          The month tabs must be named like AUG-26, with section titles in row 2, column headers in row 3
+          and data from row 4.
+        </div>
+      </div>
+
+      <div class="card hidden" id="result-card">
+        <h2>2. Check the mapping</h2>
+        <div id="found"></div>
+        <div class="row" style="margin-bottom:6px">
+          <label class="field"><span>Dashboard title</span>
+            <input type="text" id="title" style="min-width:320px" /></label>
+          <button class="btn" id="use-detected" type="button">Reset to detected</button>
+          <button class="btn save" id="save" type="button">Save and open dashboard</button>
+        </div>
+        <div class="note">
+          Blank means "not mapped" - that column simply stays empty on the dashboard. Ranges look like
+          <strong>AC:AI</strong>, single columns like <strong>AG</strong>.
+        </div>
+        <div id="maps"></div>
+      </div>
+
+      <div class="card">
+        <h2>Install into other spreadsheets</h2>
+        <div class="note">
+          Creates a bound Apps Script inside each spreadsheet and copies this code into it. Each copy is
+          standalone — it reads its own file and keeps its own settings, so this file can be unlinked
+          afterwards. One-time prerequisite: turn on the Apps Script API at
+          <strong>script.google.com/home/usersettings</strong>.
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          <span>Spreadsheet links, one per line</span>
+          <textarea id="install-urls" rows="4" style="font: inherit; font-size: 13px; border:1px solid var(--line);
+            border-radius:8px; padding:8px 10px; width:100%"
+            placeholder="https://docs.google.com/spreadsheets/d/..."></textarea>
+        </div>
+        <button class="btn primary" id="install" type="button">Copy dashboard into these sheets</button>
+        <div id="install-result" style="margin-top:12px"></div>
+      </div>
+
+      <div class="card hidden" id="columns-card">
+        <h2>3. Columns found in the sheet</h2>
+        <div class="note" id="columns-note"></div>
+        <div class="table-scroll">
+          <table><thead><tr><th>Column</th><th>Section title (row 2)</th><th>Header (row 3)</th>
+            <th>Sample values</th></tr></thead><tbody id="columns-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var FOUND = null;
+      var SCHEMA = [];
+      var VALUES = {};
+
+      function el(id) { return document.getElementById(id); }
+      function esc(v) {
+        return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+      function say(kind, message) {
+        el("status").innerHTML = message ? '<div class="' + kind + '">' + esc(message) + "</div>" : "";
+      }
+
+      function renderMaps() {
+        var groups = [];
+        var byGroup = {};
+        SCHEMA.forEach(function (field) {
+          if (!byGroup[field.group]) { byGroup[field.group] = []; groups.push(field.group); }
+          byGroup[field.group].push(field);
+        });
+        var html = "";
+        groups.forEach(function (group) {
+          html += '<div class="group"><h3>' + esc(group) + '</h3><div class="maps">';
+          byGroup[group].forEach(function (field) {
+            var value = VALUES[field.key] || "";
+            var hint = "";
+            if (FOUND && !field.range) {
+              var match = null;
+              FOUND.columns.forEach(function (column) {
+                if (column.letter === String(value).toUpperCase()) { match = column; }
+              });
+              hint = match ? (match.header || match.title || "") : "";
+            }
+            html += '<div class="map"><label>' + esc(field.label) + "</label>"
+              + '<input type="text" data-key="' + esc(field.key) + '" value="' + esc(value) + '" '
+              + 'placeholder="' + (field.range ? "AC:AI" : "AG") + '" />'
+              + '<div class="hint">' + esc(hint) + "</div></div>";
+          });
+          html += "</div></div>";
+        });
+        el("maps").innerHTML = html;
+        Array.prototype.forEach.call(el("maps").querySelectorAll("input[data-key]"), function (input) {
+          input.addEventListener("input", function () {
+            VALUES[input.getAttribute("data-key")] = input.value.trim().toUpperCase();
+          });
+          input.addEventListener("change", renderMaps);
+        });
+      }
+
+      function renderColumns() {
+        var html = "";
+        FOUND.columns.forEach(function (column) {
+          html += "<tr><td><strong>" + esc(column.letter) + "</strong></td><td>" + esc(column.title)
+            + "</td><td>" + esc(column.header) + "</td><td>" + esc(column.samples.join("  |  ")) + "</td></tr>";
+        });
+        el("columns-body").innerHTML = html;
+        el("columns-note").textContent = "Tab read: " + FOUND.sheetName + " — "
+          + FOUND.monthTabs.length + " month tabs in this file.";
+        el("columns-card").classList.remove("hidden");
+      }
+
+      function detect() {
+        var url = el("url").value.trim();
+        if (!url) { say("bad", "Paste the Google Sheets link first."); return; }
+        say("warn", "Reading the spreadsheet…");
+        el("detect").disabled = true;
+        google.script.run
+          .withSuccessHandler(function (result) {
+            el("detect").disabled = false;
+            FOUND = result;
+            SCHEMA = result.schema;
+            VALUES = {};
+            SCHEMA.forEach(function (field) {
+              VALUES[field.key] = result.detected[field.key] || result.current[field.key] || "";
+            });
+            say("ok", "Found " + result.spreadsheetName + " — " + result.monthTabs.length
+              + " month tabs. Check the mapping below.");
+            el("found").innerHTML = "";
+            if (!el("title").value) {
+              el("title").value = result.spreadsheetName;
+            }
+            el("result-card").classList.remove("hidden");
+            renderMaps();
+            renderColumns();
+          })
+          .withFailureHandler(function (error) {
+            el("detect").disabled = false;
+            say("bad", error && error.message ? error.message : String(error));
+          })
+          .kavachDetectConfig({ url: url });
+      }
+
+      function save() {
+        if (!FOUND) { return; }
+        el("save").disabled = true;
+        say("warn", "Saving…");
+        google.script.run
+          .withSuccessHandler(function () {
+            el("save").disabled = false;
+            say("ok", "Saved. Opening the dashboard…");
+            setTimeout(function () { window.top.location.href = window.top.location.pathname; }, 700);
+          })
+          .withFailureHandler(function (error) {
+            el("save").disabled = false;
+            say("bad", error && error.message ? error.message : String(error));
+          })
+          .kavachSaveConfig({
+            url: el("url").value.trim(),
+            spreadsheetId: FOUND.spreadsheetId,
+            title: el("title").value.trim(),
+            section: el("section").value.trim(),
+            values: VALUES,
+          });
+      }
+
+      function install() {
+        var links = el("install-urls").value.split(/[\r\n]+/).map(function (line) {
+          return line.trim();
+        }).filter(function (line) { return line; });
+        if (!links.length) {
+          el("install-result").innerHTML = '<div class="bad">Paste at least one spreadsheet link.</div>';
+          return;
+        }
+        el("install").disabled = true;
+        el("install-result").innerHTML = '<div class="warn">Creating scripts in ' + links.length
+          + ' spreadsheet(s)…</div>';
+        google.script.run
+          .withSuccessHandler(function (results) {
+            el("install").disabled = false;
+            var html = "";
+            results.forEach(function (item) {
+              if (item.ok) {
+                html += '<div class="ok"><strong>' + esc(item.name) + '</strong> — code copied ('
+                  + esc(item.files.join(", ")) + '). <a href="' + esc(item.scriptUrl)
+                  + '" target="_blank" rel="noopener">Open its script</a> and deploy it as a web app.</div>';
+              } else {
+                html += '<div class="bad">' + esc(item.link) + " — " + esc(item.message) + "</div>";
+              }
+            });
+            el("install-result").innerHTML = html;
+          })
+          .withFailureHandler(function (error) {
+            el("install").disabled = false;
+            el("install-result").innerHTML = '<div class="bad">'
+              + esc(error && error.message ? error.message : String(error)) + "</div>";
+          })
+          .kavachInstallToSpreadsheets({ urls: links });
+      }
+
+      el("install").addEventListener("click", install);
+      el("detect").addEventListener("click", detect);
+      el("save").addEventListener("click", save);
+      el("use-detected").addEventListener("click", function () {
+        if (!FOUND) { return; }
+        SCHEMA.forEach(function (field) { VALUES[field.key] = FOUND.detected[field.key] || ""; });
+        renderMaps();
+      });
+
+      google.script.run.withSuccessHandler(function (state) {
+        SCHEMA = state.schema;
+        if (state.configured && state.config) {
+          el("url").value = "https://docs.google.com/spreadsheets/d/" + state.config.spreadsheetId + "/edit";
+          el("section").value = state.config.subtitle || "";
+          el("title").value = state.config.title || "";
+          say("ok", "A configuration is already saved. Detect again to change it.");
+        }
+      }).kavachActiveConfig();
+    </script>
+  </body>
+</html>

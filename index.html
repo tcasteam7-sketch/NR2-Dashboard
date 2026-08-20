@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NR2 Train Movements Dashboard</title>
+    <style>
+      :root {
+        --page: #f2f7f6; --card: #ffffff; --ink: #14303a; --ink-2: #4a6570; --muted: #8aa0a8;
+        --line: #e4ecec; --band-1: #0d3b3f; --band-2: #14605e;
+        --blue: #2a78d6; --blue-bg: #eaf2fd; --orange: #eb6834; --orange-bg: #fdf0e6;
+        --crimson: #d03b3b; --crimson-bg: #fdecec; --green: #0f8a3c; --green-bg: #eaf6ec;
+        --violet: #6b4ac4; --violet-bg: #f2edfc; --aqua: #14a08a; --aqua-bg: #e6f6f2;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0 0 40px; background: var(--page); color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 14px; }
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+      .banner { margin: 18px auto 0; max-width: 1120px; border-radius: 10px; overflow: hidden;
+        background: linear-gradient(100deg, var(--band-1), var(--band-2)); color: #fff; }
+      .banner-inner { display: flex; align-items: center; gap: 18px; padding: 18px 24px 20px; }
+      .crest { width: 54px; height: 54px; flex: none; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.75); display: flex; align-items: center;
+        justify-content: center; font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+        background: rgba(255,255,255,0.08); }
+      .banner h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+      .banner .sub { margin-top: 4px; font-size: 13px; color: rgba(255,255,255,0.78); }
+      .banner .spacer { flex: 1; }
+      .banner-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+      .live { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 6px 14px;
+        font-size: 12px; font-weight: 600; }
+      .live .dot { width: 8px; height: 8px; border-radius: 50%; background: #2fd07a; }
+      .pill-btn { background: #fff; color: var(--band-1); border: none; border-radius: 999px;
+        padding: 7px 16px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+      .stripe { height: 5px; display: flex; }
+      .stripe i { flex: 1; }
+      .stripe i:nth-child(1) { background: #0f6f77; }
+      .stripe i:nth-child(2) { background: #f0b323; }
+      .stripe i:nth-child(3) { background: #c0392b; }
+      .card { background: var(--card); border-radius: 10px; padding: 18px 20px 22px; margin-top: 18px;
+        box-shadow: 0 1px 2px rgba(20,48,58,0.06); }
+      .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+      .card-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
+      .card-head .spacer { flex: 1; }
+      .chip { border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; font-size: 12px;
+        color: var(--ink-2); background: #fbfdfd; white-space: nowrap; }
+      .chip.ghost { background: #fff; }
+      .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .grid.small { grid-template-columns: repeat(5, 1fr); margin-top: 12px; }
+      .tile { position: relative; border: 1px solid var(--line); border-left: 4px solid var(--blue);
+        border-radius: 8px; background: var(--blue-bg); padding: 14px 12px 16px; text-align: center;
+        min-height: 96px; }
+      .tile.clickable { cursor: pointer; }
+      .tile.clickable:hover { box-shadow: 0 2px 8px rgba(20,48,58,0.12); }
+      .tile.plain { background: #fff; }
+      .tile .name { font-size: 13px; font-weight: 600; }
+      .tile .value { font-size: 30px; font-weight: 700; margin-top: 6px; line-height: 1.1; }
+      .tile .note { font-size: 11px; color: var(--ink-2); margin-top: 4px; }
+      .tile .sub-note { font-size: 9.5px; color: var(--muted); margin-top: 3px; word-break: break-word; }
+      .tile .badge { position: absolute; top: 6px; font-size: 8.5px; font-weight: 700;
+        background: rgba(255,255,255,0.85); border: 1px solid var(--line); border-radius: 4px;
+        padding: 1px 4px; color: var(--ink-2); }
+      .tile .badge.left { left: 6px; }
+      .tile .badge.right { right: 6px; }
+      .tile.unmapped .value { color: var(--muted); }
+      .tone-blue { border-left-color: var(--blue); background: var(--blue-bg); }
+      .tone-orange { border-left-color: var(--orange); background: var(--orange-bg); }
+      .tone-crimson { border-left-color: var(--crimson); background: var(--crimson-bg); }
+      .tone-green { border-left-color: var(--green); background: var(--green-bg); }
+      .tone-violet { border-left-color: var(--violet); background: var(--violet-bg); }
+      .tone-aqua { border-left-color: var(--aqua); background: var(--aqua-bg); }
+      .value.good { color: var(--green); }
+      .small .tile { min-height: 68px; padding: 10px 8px 12px; background: #fff; }
+      .small .tile .name { font-size: 11.5px; line-height: 1.25; }
+      .small .tile .value { font-size: 20px; margin-top: 4px; }
+      .drill { border: 1px solid var(--line); border-radius: 8px; margin-top: 14px; padding: 16px 18px 18px;
+        background: #fff; }
+      .drill-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+      .drill-head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+      .drill-head .spacer { flex: 1; }
+      .link { background: none; border: none; color: var(--ink-2); font: inherit; font-size: 13px;
+        cursor: pointer; padding: 4px; }
+      .link:hover { color: var(--ink); text-decoration: underline; }
+      .table-scroll { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+      th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left;
+        vertical-align: top; white-space: nowrap; }
+      th { background: #f7fafa; color: var(--ink-2); font-weight: 600; font-size: 11.5px;
+        text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #c3c2b7; }
+      td.num, th.num { text-align: center; width: 44px; }
+      td.wrap { white-space: normal; min-width: 240px; }
+      td.muted { color: var(--muted); }
+      tbody tr:hover td { background: #fafcfc; }
+      .reasons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+      .reason { border: 1px solid var(--line); border-left: 4px solid var(--blue); border-radius: 8px;
+        padding: 12px 14px; background: #fff; }
+      .reason .label { font-size: 12px; color: var(--ink-2); }
+      .reason .text { font-size: 15px; font-weight: 600; margin-top: 4px; line-height: 1.3; }
+      .reason .meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+      .btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line);
+        border-radius: 8px; background: #fff; color: var(--ink); padding: 8px 16px; cursor: pointer;
+        text-decoration: none; display: inline-block; }
+      .btn:hover { border-color: var(--band-2); color: var(--band-2); }
+      .btn[aria-pressed="true"] { background: var(--band-2); border-color: var(--band-2); color: #fff; }
+      .btn.download { background: var(--green); border-color: var(--green); color: #fff; }
+      .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field span { font-size: 11px; color: var(--ink-2); font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.04em; }
+      input[type="date"], select { font: inherit; font-size: 13px; color: var(--ink); background: #fff;
+        border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+      input[type="date"]:focus, select:focus { outline: 2px solid var(--band-2); outline-offset: 1px; }
+      .empty { padding: 22px; text-align: center; color: var(--muted); font-size: 13px; }
+      .warn { margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: #fff8e6;
+        border: 1px solid #f3e0ac; color: #6b5313; font-size: 12.5px; }
+      .loading { padding: 60px; text-align: center; color: var(--ink-2); }
+      .loading .hint { margin-top: 8px; font-size: 12px; color: var(--muted); }
+      @media (max-width: 900px) {
+        .grid, .grid.small { grid-template-columns: repeat(2, 1fr); }
+        .reasons { grid-template-columns: 1fr; }
+        .banner-inner { flex-wrap: wrap; }
+        .banner h1 { font-size: 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="banner-inner">
+        <div class="crest">KAVACH</div>
+        <div>
+          <h1 id="title">Kavach Dashboard</h1>
+          <div class="sub" id="subtitle">Connecting…</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="banner-right">
+          <span class="live"><span class="dot"></span><span id="live">Loading…</span></span>
+          <button class="pill-btn" id="refresh" type="button">Refresh</button>
+        </div>
+      </div>
+      <div class="stripe"><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="wrap" id="root">
+      <div class="card"><div class="loading">Contacting the sheet…<div class="hint">First load can take up to 20 seconds while it reads the sheet.</div></div></div>
+    </div>
+
+    <script>
+      /* ---------------------------------------------------------------
+         CONFIG — paste the Apps Script web app /exec URL here.
+         If KAVACH_API_KEY is set in Code.gs, put the same value in KEY.
+      --------------------------------------------------------------- */
+      var API_URL = "PASTE_YOUR_NR2_EXEC_URL_HERE";
+      var KEY = "";
+
+      var DATA = null, SUMMARY = null, SUMMARY_STATE = "loading";
+      var OPEN = { today: "", yesterday: "" };
+      var REPORT = null, REPORT_TYPE = "", REPORT_STATE = "idle";
+      var RANGE = { from: "", to: "", make: "", data: null, state: "idle", error: "" };
+      var DETAIL = { from: "", to: "", report: "mode", brakeKind: "", makes: [], data: null,
+        state: "idle", error: "" };
+
+      function el(id) { return document.getElementById(id); }
+      function esc(v) {
+        return String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+      function pad(v) { var n = Number(v) || 0; return n < 10 ? "0" + n : String(n); }
+
+      function apiUrl(params) {
+        var query = [];
+        Object.keys(params).forEach(function (k) {
+          if (params[k] !== undefined && params[k] !== null && params[k] !== "") {
+            query.push(encodeURIComponent(k) + "=" + encodeURIComponent(params[k]));
+          }
+        });
+        if (KEY) { query.push("key=" + encodeURIComponent(KEY)); }
+        return API_URL + (API_URL.indexOf("?") >= 0 ? "&" : "?") + query.join("&");
+      }
+
+      /* Apps Script allows plain GET cross-origin. JSONP is the fallback for
+         browsers or proxies that block the redirect it issues. */
+      function jsonp(params) {
+        return new Promise(function (resolve, reject) {
+          var name = "kavachCb" + Date.now() + Math.floor(Math.random() * 1000);
+          var timer = setTimeout(function () { cleanup(); reject(new Error("Request timed out.")); }, 120000);
+          function cleanup() {
+            clearTimeout(timer);
+            delete window[name];
+            if (tag.parentNode) { tag.parentNode.removeChild(tag); }
+          }
+          window[name] = function (body) { cleanup(); resolve(body); };
+          var copy = {};
+          Object.keys(params).forEach(function (k) { copy[k] = params[k]; });
+          copy.callback = name;
+          var tag = document.createElement("script");
+          tag.src = apiUrl(copy);
+          tag.onerror = function () { cleanup(); reject(new Error("Could not reach the API.")); };
+          document.body.appendChild(tag);
+        });
+      }
+
+      function api(params) {
+        return fetch(apiUrl(params), { method: "GET" })
+          .then(function (response) { return response.json(); })
+          .catch(function () { return jsonp(params); })
+          .then(function (body) {
+            if (!body || !body.ok) {
+              throw new Error((body && body.error) || "The API returned an error.");
+            }
+            return body;
+          });
+      }
+
+      function tileHtml(o) {
+        var cls = ["tile", "tone-" + (o.tone || "blue")];
+        if (o.plain) { cls.push("plain"); }
+        if (o.click) { cls.push("clickable"); }
+        if (o.unmapped) { cls.push("unmapped"); }
+        var html = '<div class="' + cls.join(" ") + '"' + (o.click ? ' data-open="' + esc(o.click) + '"' : "") + ">";
+        if (o.badgeLeft) { html += '<span class="badge left">' + esc(o.badgeLeft) + "</span>"; }
+        if (o.badgeRight) { html += '<span class="badge right">' + esc(o.badgeRight) + "</span>"; }
+        html += '<div class="name">' + esc(o.name) + "</div>";
+        html += '<div class="value' + (o.good ? " good" : "") + '">' + esc(o.value) + "</div>";
+        if (o.note) { html += '<div class="note">' + esc(o.note) + "</div>"; }
+        if (o.subNote) { html += '<div class="sub-note">' + esc(o.subNote) + "</div>"; }
+        return html + "</div>";
+      }
+
+      function metricTile(m, scope) {
+        return tileHtml({
+          name: scope === "yesterday" ? m.altLabel : m.label,
+          value: m.mapped ? pad(m.count) : "—",
+          tone: m.tone, unmapped: !m.mapped,
+          click: m.mapped && m.events.length ? scope + ":" + m.key : "",
+          badgeLeft: m.mapped ? "Non-ICMS " + pad(m.nonIcms) : "",
+          badgeRight: m.mapped ? "ICMS " + pad(m.icms) : "",
+        });
+      }
+
+      function trainTile(day, scope) {
+        var t = day.train || {};
+        var note = t.mapped ? (t.directionFound ? "UP " + t.up + " | DN " + t.dn : "Direction not mapped") : "";
+        return tileHtml({
+          name: "Total Train", value: t.mapped ? t.total : "—", tone: "blue", unmapped: !t.mapped,
+          click: t.mapped ? scope + ":__train" : "", note: note,
+          subNote: (t.makes || []).map(function (m) { return m.name + "-" + pad(m.count); }).join(", "),
+        });
+      }
+
+      function trainDrillHtml(day, scope) {
+        var t = day.train || {};
+        var html = '<div class="drill"><div class="drill-head"><h3>Total Train by OEM</h3><div class="spacer"></div>'
+          + '<button class="link" data-close="' + esc(scope) + '" type="button">Close</button></div>'
+          + '<div class="chip" style="display:inline-block;margin-bottom:12px">' + esc(day.display)
+          + " | Trains: " + t.total + " | Unique locos: " + (t.uniqueLocos || 0) + "</div>";
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>OEM Make</th>'
+          + "<th>Trains</th><th>Loco count</th><th>UP</th><th>DN</th></tr></thead><tbody>";
+        (t.makes || []).forEach(function (m, i) {
+          html += '<tr><td class="num">' + (i + 1) + "</td><td>" + esc(m.name) + "</td><td>" + m.count
+            + "</td><td>" + m.locos + "</td><td>" + m.up + "</td><td>" + m.dn + "</td></tr>";
+        });
+        html += '<tr><td class="num"></td><td><strong>Total</strong></td><td><strong>' + t.total
+          + "</strong></td><td><strong>" + (t.uniqueLocos || 0) + "</strong></td><td><strong>" + t.up
+          + "</strong></td><td><strong>" + t.dn + "</strong></td></tr>";
+        return html + "</tbody></table></div></div>";
+      }
+
+      function drillHtml(day, scope) {
+        var key = OPEN[scope];
+        if (!key) { return ""; }
+        if (key === "__train") { return trainDrillHtml(day, scope); }
+        var metric = null;
+        day.metrics.forEach(function (m) { if (m.key === key) { metric = m; } });
+        if (!metric) { return ""; }
+        var html = '<div class="drill"><div class="drill-head"><h3>' + esc(metric.label) + "</h3>"
+          + '<div class="spacer"></div><button class="link" data-close="' + esc(scope)
+          + '" type="button">Close</button></div>'
+          + '<div class="chip" style="display:inline-block;margin-bottom:12px">' + esc(day.display)
+          + " | No. of " + esc(metric.label) + ": " + metric.count + "</div>";
+        if (!metric.events.length) { return html + '<div class="empty">No entries for this date.</div></div>'; }
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th>';
+        metric.columns.forEach(function (c) { html += "<th>" + esc(c) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        metric.events.forEach(function (e, i) {
+          html += '<tr><td class="num">' + (i + 1) + "</td>";
+          e.cells.forEach(function (cell) { html += "<td>" + esc(cell) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function dayCard(day, scope, heading, chipLabel) {
+        var html = '<div class="card"><div class="card-head"><h2>' + esc(heading) + "</h2>"
+          + '<div class="spacer"></div><span class="chip ghost">All Events</span>'
+          + '<span class="chip">' + esc(chipLabel) + "</span></div>";
+        if (!day.found) {
+          return html + '<div class="empty">No month sheet found for ' + esc(day.display) + ".</div></div>";
+        }
+        html += '<div class="grid">' + trainTile(day, scope);
+        day.metrics.forEach(function (m) { html += metricTile(m, scope); });
+        html += tileHtml({
+          name: scope === "today" ? "Today Availability" : "Operational Availability",
+          value: day.availability || "—", tone: "aqua", good: Boolean(day.availability),
+          unmapped: !day.availability,
+        });
+        html += "</div>";
+        if (scope === "yesterday" && DATA.extras && DATA.extras.length) {
+          html += '<div class="grid small">';
+          DATA.extras.forEach(function (t) {
+            html += tileHtml({ name: t.label, value: t.value === null ? "—" : t.value, tone: t.tone,
+              plain: true, unmapped: t.value === null });
+          });
+          html += "</div>";
+        }
+        return html + drillHtml(day, scope) + "</div>";
+      }
+
+      function summaryCard() {
+        if (SUMMARY_STATE === "loading") {
+          return '<div class="card"><div class="card-head"><h2>Operational Summary</h2></div>'
+            + '<div class="empty">Scanning every month sheet…</div></div>';
+        }
+        if (SUMMARY_STATE === "error") {
+          return '<div class="card"><div class="card-head"><h2>Operational Summary</h2><div class="spacer"></div>'
+            + '<button class="link" id="retry-summary" type="button">Retry</button></div>'
+            + '<div class="warn">' + esc(SUMMARY) + "</div></div>";
+        }
+        var s = SUMMARY || {}, totals = s.totals || [];
+        var html = '<div class="card"><div class="card-head"><h2>Operational Summary</h2><div class="spacer"></div>'
+          + '<span class="chip">' + esc(s.monthSheets || 0) + " month sheets</span></div><div class=\"grid\">"
+          + tileHtml({ name: "Train Runs", value: (s.trainRuns || 0).toLocaleString(), tone: "blue", plain: true })
+          + tileHtml({ name: "Total Incidences", tone: "orange", plain: true,
+            value: totals.reduce(function (a, b) { return a + b.count; }, 0).toLocaleString() })
+          + tileHtml({ name: "ICMS", tone: "violet", plain: true,
+            value: totals.reduce(function (a, b) { return a + b.icms; }, 0).toLocaleString() })
+          + tileHtml({ name: "Non-ICMS", tone: "aqua", plain: true,
+            value: totals.reduce(function (a, b) { return a + b.nonIcms; }, 0).toLocaleString() })
+          + "</div></div>";
+
+        html += '<div class="card"><div class="card-head"><h2>Incidence Summary</h2><div class="spacer"></div>'
+          + '<span class="chip">' + esc(s.generatedAt || "") + '</span></div><div class="grid">';
+        totals.forEach(function (t) {
+          html += tileHtml({ name: t.label, value: (t.count || 0).toLocaleString(), tone: t.tone, plain: true });
+        });
+        html += "</div>";
+        if ((s.topReasons || []).length) {
+          html += '<div class="reasons">';
+          s.topReasons.slice(0, 3).forEach(function (r) {
+            html += '<div class="reason" style="border-left-color: var(--' + esc(r.tone) + ')">'
+              + '<div class="label">Top ' + esc(r.label) + ' Reason</div><div class="text" style="color: var(--'
+              + esc(r.tone) + ')">' + esc(r.reason) + '</div><div class="meta">' + r.count + " cases / "
+              + r.share + "%</div></div>";
+          });
+          html += "</div>";
+        }
+        return html + "</div>";
+      }
+
+      function rangeCard() {
+        if (!RANGE.from) { RANGE.from = DATA.yesterday.display; }
+        if (!RANGE.to) { RANGE.to = DATA.today.display; }
+        var html = '<div class="card"><div class="card-head"><h2>Date range summary</h2><div class="spacer"></div>'
+          + '<span class="chip">By OEM</span></div><div class="btn-row">'
+          + '<label class="field"><span>From date</span><input type="date" id="range-from" value="'
+          + esc(RANGE.from) + '"></label>'
+          + '<label class="field"><span>To date</span><input type="date" id="range-to" value="'
+          + esc(RANGE.to) + '"></label>'
+          + '<button class="btn" id="range-generate" type="button">Generate</button>';
+        if (RANGE.data) {
+          html += '<label class="field"><span>OEM / loco make</span><select id="range-make">'
+            + '<option value=""' + (RANGE.make ? "" : " selected") + ">All OEMs</option>";
+          RANGE.data.makes.forEach(function (m) {
+            html += '<option value="' + esc(m.name) + '"' + (RANGE.make === m.name ? " selected" : "") + ">"
+              + esc(m.name) + " (" + m.count + ")</option>";
+          });
+          html += "</select></label>"
+            + '<a class="btn download" target="_blank" rel="noopener" href="'
+            + esc(apiUrl({ action: "csv", type: "range", from: RANGE.data.from, to: RANGE.data.to,
+              make: RANGE.make })) + '">Download CSV</a>';
+        }
+        html += "</div>";
+        if (RANGE.state === "loading") { return html + '<div class="empty">Reading the range…</div></div>'; }
+        if (RANGE.state === "error") { return html + '<div class="warn">' + esc(RANGE.error) + "</div></div>"; }
+        if (!RANGE.data) { return html + '<div class="empty">Pick a date range and press Generate.</div></div>'; }
+        var r = RANGE.data;
+        html += '<div class="chip" style="display:inline-block;margin-bottom:12px">' + esc(r.from) + " to "
+          + esc(r.to) + " | " + esc(RANGE.make || "All OEMs") + "</div>";
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>Item</th>';
+        r.columns.forEach(function (c) { html += "<th>" + esc(c) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        r.rows.forEach(function (row) {
+          html += '<tr><td class="num">' + row.sno + "</td><td>" + esc(row.item) + "</td>";
+          row.values.forEach(function (v) { html += "<td>" + esc(v) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function detailCard() {
+        if (!DETAIL.from) { DETAIL.from = DATA.yesterday.display; }
+        if (!DETAIL.to) { DETAIL.to = DATA.today.display; }
+        var types = [
+          { value: "mode", label: "Mode change" },
+          { value: "brake", label: "Brake application" },
+          { value: "both", label: "Brake application and Mode change" },
+          { value: "tag", label: "Tag Miss" },
+        ];
+        var html = '<div class="card"><div class="card-head"><h2>Additional Report</h2><div class="spacer"></div>'
+          + '<span class="chip">Row level</span></div><div class="btn-row">'
+          + '<label class="field"><span>From date</span><input type="date" id="detail-from" value="'
+          + esc(DETAIL.from) + '"></label>'
+          + '<label class="field"><span>To date</span><input type="date" id="detail-to" value="'
+          + esc(DETAIL.to) + '"></label>'
+          + '<label class="field"><span>Report</span><select id="detail-report">';
+        types.forEach(function (t) {
+          html += '<option value="' + t.value + '"' + (DETAIL.report === t.value ? " selected" : "") + ">"
+            + esc(t.label) + "</option>";
+        });
+        html += "</select></label>";
+        if (DETAIL.report === "brake") {
+          var kinds = [{ value: "", label: "Both" }, { value: "undesirable", label: "Undesirable only" },
+            { value: "desirable", label: "Desirable only" }];
+          html += '<label class="field"><span>Brake type</span><select id="detail-kind">';
+          kinds.forEach(function (k) {
+            html += '<option value="' + k.value + '"' + (DETAIL.brakeKind === k.value ? " selected" : "") + ">"
+              + esc(k.label) + "</option>";
+          });
+          html += "</select></label>";
+        }
+        html += '<button class="btn" id="detail-generate" type="button">Generate</button>';
+        if (DETAIL.data) {
+          html += '<label class="field"><span>OEM (ctrl-click for several)</span>'
+            + '<select id="detail-makes" multiple size="4" style="min-width:170px">'
+            + '<option value="__all"' + (DETAIL.makes.length ? "" : " selected") + ">All OEMs</option>";
+          DETAIL.data.makes.forEach(function (m) {
+            html += '<option value="' + esc(m.name) + '"' + (DETAIL.makes.indexOf(m.name) >= 0 ? " selected" : "")
+              + ">" + esc(m.name) + " (" + m.count + ")</option>";
+          });
+          html += "</select></label>"
+            + '<a class="btn download" target="_blank" rel="noopener" href="'
+            + esc(apiUrl({ action: "csv", type: "detail", from: DETAIL.data.from, to: DETAIL.data.to,
+              report: DETAIL.data.reportType, brakeKind: DETAIL.data.brakeKind || "",
+              makes: DETAIL.makes.join(",") })) + '">Download CSV</a>';
+        }
+        html += "</div>";
+        if (DETAIL.state === "loading") { return html + '<div class="empty">Reading the range…</div></div>'; }
+        if (DETAIL.state === "error") { return html + '<div class="warn">' + esc(DETAIL.error) + "</div></div>"; }
+        if (!DETAIL.data) { return html + '<div class="empty">Pick a range and a report, then Generate.</div></div>'; }
+        var r = DETAIL.data;
+        var visible = DETAIL.makes.length
+          ? r.rows.filter(function (row) { return DETAIL.makes.indexOf(row.make) >= 0; }) : r.rows;
+        var showMake = DETAIL.makes.length !== 1;
+        var keys = [], labels = [];
+        r.keys.forEach(function (k, i) {
+          if (k === "make" && !showMake) { return; }
+          keys.push(k); labels.push(r.columns[i]);
+        });
+        html += '<div class="chip" style="display:inline-block;margin-bottom:12px">' + esc(r.from) + " to "
+          + esc(r.to) + " | " + esc(r.title) + " | " + visible.length + " rows | "
+          + esc(DETAIL.makes.join(", ") || "All OEMs") + "</div>";
+        if (r.truncated) {
+          html += '<div class="warn" style="margin-bottom:12px">Stopped at ' + r.rows.length
+            + " rows. Narrow the range.</div>";
+        }
+        if ((r.unmapped || []).length) {
+          html += '<div class="warn" style="margin-bottom:12px">No column set yet for: '
+            + esc(r.unmapped.join(", ")) + "</div>";
+        }
+        if (!visible.length) { return html + '<div class="empty">No events in this range.</div></div>'; }
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th>';
+        labels.forEach(function (l) { html += "<th>" + esc(l) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        visible.forEach(function (row, i) {
+          html += '<tr><td class="num">' + (i + 1) + "</td>";
+          keys.forEach(function (k) { html += "<td>" + esc(row[k]) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function reportCard() {
+        var html = '<div class="card"><div class="card-head"><h2>Download reports</h2><div class="spacer"></div>'
+          + '<span class="chip">Month-wise</span></div><div class="btn-row">'
+          + '<button class="btn" id="report-modeChange" type="button" aria-pressed="'
+          + (REPORT_TYPE === "modeChange") + '">Mode change status</button>'
+          + '<button class="btn" id="report-summary" type="button" aria-pressed="'
+          + (REPORT_TYPE === "summary") + '">Summary</button>';
+        if (REPORT_STATE === "ready") {
+          html += '<a class="btn download" target="_blank" rel="noopener" href="'
+            + esc(apiUrl({ action: "csv", type: REPORT_TYPE })) + '">Download CSV</a>';
+        }
+        html += "</div>";
+        if (REPORT_STATE === "idle") { return html + '<div class="empty">Pick a report.</div></div>'; }
+        if (REPORT_STATE === "loading") { return html + '<div class="empty">Building the report…</div></div>'; }
+        if (REPORT_STATE === "error") { return html + '<div class="warn">' + esc(REPORT) + "</div></div>"; }
+        (REPORT.notes || []).forEach(function (n) {
+          html += '<div class="warn" style="margin-bottom:12px">' + esc(n) + "</div>";
+        });
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>Item</th>';
+        REPORT.columns.forEach(function (c) { html += "<th>" + esc(c) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        REPORT.rows.forEach(function (row) {
+          html += '<tr><td class="num">' + row.sno + "</td><td>" + esc(row.item) + "</td>";
+          row.values.forEach(function (v) { html += "<td>" + esc(v) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function render() {
+        el("title").textContent = DATA.title;
+        el("subtitle").textContent = DATA.subtitle;
+        el("live").textContent = "Live - " + DATA.liveLabel;
+        el("root").innerHTML = dayCard(DATA.today, "today", "Today Status", "Today " + DATA.today.display)
+          + dayCard(DATA.yesterday, "yesterday", "Yesterday Position", "Date: " + DATA.yesterday.display)
+          + summaryCard() + rangeCard() + detailCard() + reportCard();
+        bind();
+      }
+
+      function bind() {
+        Array.prototype.forEach.call(document.querySelectorAll("[data-open]"), function (n) {
+          n.addEventListener("click", function () {
+            var p = n.getAttribute("data-open").split(":");
+            OPEN[p[0]] = OPEN[p[0]] === p[1] ? "" : p[1];
+            render();
+          });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function (n) {
+          n.addEventListener("click", function () { OPEN[n.getAttribute("data-close")] = ""; render(); });
+        });
+        var retry = el("retry-summary");
+        if (retry) { retry.addEventListener("click", loadSummary); }
+
+        var rf = el("range-from"), rt = el("range-to"), rg = el("range-generate"), rm = el("range-make");
+        if (rf) { rf.addEventListener("change", function () { RANGE.from = rf.value; }); }
+        if (rt) { rt.addEventListener("change", function () { RANGE.to = rt.value; }); }
+        if (rg) {
+          rg.addEventListener("click", function () {
+            if (rf) { RANGE.from = rf.value; }
+            if (rt) { RANGE.to = rt.value; }
+            RANGE.make = "";
+            loadRange();
+          });
+        }
+        if (rm) { rm.addEventListener("change", function () { RANGE.make = rm.value; loadRange(); }); }
+
+        var df = el("detail-from"), dt = el("detail-to"), dr = el("detail-report"),
+          dk = el("detail-kind"), dg = el("detail-generate"), dm = el("detail-makes");
+        if (dk) { dk.addEventListener("change", function () { DETAIL.brakeKind = dk.value; }); }
+        if (dr) {
+          dr.addEventListener("change", function () {
+            if (df) { DETAIL.from = df.value; }
+            if (dt) { DETAIL.to = dt.value; }
+            DETAIL.report = dr.value;
+            render();
+          });
+        }
+        if (dg) {
+          dg.addEventListener("click", function () {
+            if (df) { DETAIL.from = df.value; }
+            if (dt) { DETAIL.to = dt.value; }
+            if (dr) { DETAIL.report = dr.value; }
+            if (dk) { DETAIL.brakeKind = dk.value; }
+            DETAIL.makes = [];
+            loadDetail();
+          });
+        }
+        if (dm) {
+          dm.addEventListener("change", function () {
+            var picked = Array.prototype.slice.call(dm.selectedOptions).map(function (o) { return o.value; });
+            DETAIL.makes = picked.indexOf("__all") >= 0 ? [] : picked;
+            render();
+          });
+        }
+
+        ["modeChange", "summary"].forEach(function (type) {
+          var b = el("report-" + type);
+          if (b) { b.addEventListener("click", function () { loadReport(type); }); }
+        });
+      }
+
+      function loadRange() {
+        RANGE.state = "loading"; render();
+        api({ action: "range", from: RANGE.from, to: RANGE.to, make: RANGE.make })
+          .then(function (body) { RANGE.data = body.report; RANGE.state = "ready"; render(); })
+          .catch(function (e) { RANGE.error = e.message; RANGE.state = "error"; render(); });
+      }
+
+      function loadDetail() {
+        DETAIL.state = "loading"; render();
+        api({ action: "detail", from: DETAIL.from, to: DETAIL.to, report: DETAIL.report,
+          brakeKind: DETAIL.report === "brake" ? DETAIL.brakeKind : "" })
+          .then(function (body) { DETAIL.data = body.report; DETAIL.state = "ready"; render(); })
+          .catch(function (e) { DETAIL.error = e.message; DETAIL.state = "error"; render(); });
+      }
+
+      function loadReport(type) {
+        REPORT_TYPE = type; REPORT_STATE = "loading"; render();
+        api({ action: "report", type: type })
+          .then(function (body) { REPORT = body.report; REPORT_STATE = "ready"; render(); })
+          .catch(function (e) { REPORT = e.message; REPORT_STATE = "error"; render(); });
+      }
+
+      function loadSummary() {
+        SUMMARY_STATE = "loading";
+        if (DATA) { render(); }
+        api({ action: "summary" })
+          .then(function (body) { SUMMARY = body.summary; SUMMARY_STATE = "ready"; render(); })
+          .catch(function (e) { SUMMARY = e.message; SUMMARY_STATE = "error"; render(); });
+      }
+
+      function load() {
+        el("refresh").disabled = true;
+        if (API_URL.indexOf("PASTE_YOUR") === 0) {
+          el("root").innerHTML = '<div class="card"><div class="warn">Set <strong>API_URL</strong> at the top '
+            + "of index.html to your Apps Script /exec URL.</div></div>";
+          el("refresh").disabled = false;
+          return;
+        }
+        api({ action: "day" })
+          .then(function (body) {
+            DATA = body.data;
+            el("refresh").disabled = false;
+            render();
+            loadSummary();
+          })
+          .catch(function (e) {
+            el("refresh").disabled = false;
+            el("root").innerHTML = '<div class="card"><div class="warn">Could not load: ' + esc(e.message)
+              + "</div></div>";
+          });
+      }
+
+      el("refresh").addEventListener("click", load);
+      load();
+    </script>
+  </body>
+</html>

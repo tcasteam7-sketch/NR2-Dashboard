@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      :root {
+        --page: #f2f7f6;
+        --card: #ffffff;
+        --ink: #14303a;
+        --ink-2: #4a6570;
+        --muted: #8aa0a8;
+        --line: #e4ecec;
+        --band-1: #0d3b3f;
+        --band-2: #14605e;
+        --blue: #2a78d6;
+        --blue-bg: #eaf2fd;
+        --orange: #eb6834;
+        --orange-bg: #fdf0e6;
+        --crimson: #d03b3b;
+        --crimson-bg: #fdecec;
+        --green: #0f8a3c;
+        --green-bg: #eaf6ec;
+        --violet: #6b4ac4;
+        --violet-bg: #f2edfc;
+        --aqua: #14a08a;
+        --aqua-bg: #e6f6f2;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 0 0 40px;
+        background: var(--page);
+        color: var(--ink);
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 14px;
+      }
+
+      .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+
+      .banner {
+        margin: 18px auto 0;
+        max-width: 1120px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: linear-gradient(100deg, var(--band-1), var(--band-2));
+        color: #fff;
+      }
+      .banner-inner {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 24px 20px;
+      }
+      .crest {
+        width: 54px; height: 54px; flex: none;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.75);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+        background: rgba(255,255,255,0.08);
+      }
+      .banner h1 { margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -0.01em; }
+      .banner .sub { margin-top: 4px; font-size: 13px; color: rgba(255,255,255,0.78); }
+      .banner .spacer { flex: 1; }
+      .banner-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+      .live {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.14);
+        border: 1px solid rgba(255,255,255,0.22);
+        border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+      }
+      .live .dot { width: 8px; height: 8px; border-radius: 50%; background: #2fd07a; }
+      .pill-btn {
+        background: #fff; color: var(--band-1);
+        border: none; border-radius: 999px;
+        padding: 7px 16px; font: inherit; font-size: 12px; font-weight: 700;
+        cursor: pointer;
+      }
+      .stripe { height: 5px; display: flex; }
+      .stripe i { flex: 1; }
+      .stripe i:nth-child(1) { background: #0f6f77; }
+      .stripe i:nth-child(2) { background: #f0b323; }
+      .stripe i:nth-child(3) { background: #c0392b; }
+
+      .card {
+        background: var(--card);
+        border-radius: 10px;
+        padding: 18px 20px 22px;
+        margin-top: 18px;
+        box-shadow: 0 1px 2px rgba(20, 48, 58, 0.06);
+      }
+      .card-head {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 16px;
+      }
+      .card-head h2 { margin: 0; font-size: 17px; font-weight: 600; }
+      .card-head .spacer { flex: 1; }
+      .chip {
+        border: 1px solid var(--line); border-radius: 999px;
+        padding: 5px 14px; font-size: 12px; color: var(--ink-2);
+        background: #fbfdfd; white-space: nowrap;
+      }
+      .chip.ghost { background: #fff; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .grid.small { grid-template-columns: repeat(5, 1fr); margin-top: 12px; }
+
+      .tile {
+        position: relative;
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--blue);
+        border-radius: 8px;
+        background: var(--blue-bg);
+        padding: 14px 12px 16px;
+        text-align: center;
+        min-height: 96px;
+      }
+      .tile.clickable { cursor: pointer; }
+      .tile.clickable:hover { box-shadow: 0 2px 8px rgba(20, 48, 58, 0.12); }
+      .tile.plain { background: #fff; }
+      .tile .name { font-size: 13px; font-weight: 600; color: var(--ink); }
+      .tile .value { font-size: 30px; font-weight: 700; margin-top: 6px; line-height: 1.1; }
+      .tile .note { font-size: 11px; color: var(--ink-2); margin-top: 4px; }
+      .tile .sub-note { font-size: 9.5px; color: var(--muted); margin-top: 3px; word-break: break-word; }
+      .tile .badge {
+        position: absolute; top: 6px;
+        font-size: 8.5px; font-weight: 700; letter-spacing: 0.02em;
+        background: rgba(255,255,255,0.85);
+        border: 1px solid var(--line);
+        border-radius: 4px; padding: 1px 4px; color: var(--ink-2);
+      }
+      .tile .badge.left { left: 6px; }
+      .tile .badge.right { right: 6px; }
+      .tile.unmapped .value { color: var(--muted); }
+
+      .tone-blue { border-left-color: var(--blue); background: var(--blue-bg); }
+      .tone-orange { border-left-color: var(--orange); background: var(--orange-bg); }
+      .tone-crimson { border-left-color: var(--crimson); background: var(--crimson-bg); }
+      .tone-green { border-left-color: var(--green); background: var(--green-bg); }
+      .tone-violet { border-left-color: var(--violet); background: var(--violet-bg); }
+      .tone-aqua { border-left-color: var(--aqua); background: var(--aqua-bg); }
+      .value.good { color: var(--green); }
+
+      .small .tile { min-height: 68px; padding: 10px 8px 12px; background: #fff; }
+      .small .tile .name { font-size: 11.5px; line-height: 1.25; }
+      .small .tile .value { font-size: 20px; margin-top: 4px; }
+
+      .drill {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-top: 14px;
+        padding: 16px 18px 18px;
+        background: #fff;
+      }
+      .drill-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+      .drill-head h3 { margin: 0; font-size: 16px; font-weight: 600; }
+      .drill-head .spacer { flex: 1; }
+      .link {
+        background: none; border: none; color: var(--ink-2);
+        font: inherit; font-size: 13px; cursor: pointer; padding: 4px;
+      }
+      .link:hover { color: var(--ink); text-decoration: underline; }
+
+      .table-scroll { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+      th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+      th {
+        background: #f7fafa; color: var(--ink-2);
+        font-weight: 600; font-size: 11.5px; white-space: nowrap;
+      }
+      td.num, th.num { text-align: center; width: 44px; }
+      tbody tr:hover td { background: #fafcfc; }
+
+      .reasons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+      .reason {
+        border: 1px solid var(--line); border-left: 4px solid var(--blue);
+        border-radius: 8px; padding: 12px 14px; background: #fff;
+      }
+      .reason .label { font-size: 12px; color: var(--ink-2); }
+      .reason .text { font-size: 15px; font-weight: 600; color: var(--blue); margin-top: 4px; line-height: 1.3; }
+      .reason .meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+      .btn {
+        font: inherit; font-size: 13px; font-weight: 600;
+        border: 1px solid var(--line); border-radius: 8px;
+        background: #fff; color: var(--ink); padding: 8px 16px; cursor: pointer;
+        text-decoration: none; display: inline-block;
+      }
+      .btn:hover { border-color: var(--band-2); color: var(--band-2); }
+      .btn[aria-pressed="true"] { background: var(--band-2); border-color: var(--band-2); color: #fff; }
+      .btn.download { background: var(--green); border-color: var(--green); color: #fff; }
+      .btn.download:hover { opacity: 0.92; color: #fff; }
+      .btn-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field span { font-size: 11px; color: var(--ink-2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+      input[type="date"], select {
+        font: inherit; font-size: 13px; color: var(--ink);
+        background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px;
+      }
+      input[type="date"]:focus, select:focus { outline: 2px solid var(--band-2); outline-offset: 1px; }
+
+      .empty { padding: 22px; text-align: center; color: var(--muted); font-size: 13px; }
+      .warn {
+        margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+        background: #fff8e6; border: 1px solid #f3e0ac; color: #6b5313; font-size: 12.5px;
+      }
+      .loading { padding: 60px; text-align: center; color: var(--ink-2); }
+
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: repeat(2, 1fr); }
+        .grid.small { grid-template-columns: repeat(2, 1fr); }
+        .reasons { grid-template-columns: 1fr; }
+        .banner-inner { flex-wrap: wrap; }
+        .banner h1 { font-size: 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="banner-inner">
+        <div class="crest">KAVACH</div>
+        <div>
+          <h1 id="title">Mumbai Division Kavach Dashboard</h1>
+          <div class="sub" id="subtitle">VR-ST section operational monitoring</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="banner-right">
+          <span class="live"><span class="dot"></span><span id="live">Loading…</span></span>
+          <span style="display:flex;gap:8px">
+            <a class="pill-btn" id="setup-link" href="#" style="text-decoration:none">Setup</a>
+            <button class="pill-btn" id="refresh" type="button">Refresh</button>
+          </span>
+        </div>
+      </div>
+      <div class="stripe"><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="wrap" id="root">
+      <div class="card"><div class="loading">Reading the spreadsheet…</div></div>
+    </div>
+
+    <script>
+      var DATA = null;
+      var SUMMARY = null;
+      var SUMMARY_STATE = "loading";
+      var OPEN = { today: "", yesterday: "" };
+      var REPORT = null;
+      var REPORT_TYPE = "";
+      var REPORT_STATE = "idle";
+      var REPORT_TICKET = 0;
+      var RANGE = { from: "", to: "", make: "", data: null, state: "idle", error: "" };
+      var DETAIL = { from: "", to: "", report: "mode", brakeKind: "", makes: [], data: null, state: "idle", error: "" };
+
+      function el(id) { return document.getElementById(id); }
+
+      function esc(value) {
+        return String(value == null ? "" : value)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      }
+
+      function pad(value) {
+        var number = Number(value) || 0;
+        return number < 10 ? "0" + number : String(number);
+      }
+
+      function tileHtml(options) {
+        var classes = ["tile", "tone-" + (options.tone || "blue")];
+        if (options.plain) { classes.push("plain"); }
+        if (options.click) { classes.push("clickable"); }
+        if (options.unmapped) { classes.push("unmapped"); }
+        var html = '<div class="' + classes.join(" ") + '"'
+          + (options.click ? ' data-open="' + esc(options.click) + '"' : "")
+          + (options.unmapped ? ' title="No matching section found in the sheet header"' : "")
+          + ">";
+        if (options.badgeLeft) { html += '<span class="badge left">' + esc(options.badgeLeft) + "</span>"; }
+        if (options.badgeRight) { html += '<span class="badge right">' + esc(options.badgeRight) + "</span>"; }
+        html += '<div class="name">' + esc(options.name) + "</div>";
+        html += '<div class="value' + (options.good ? " good" : "") + '">' + esc(options.value) + "</div>";
+        if (options.note) { html += '<div class="note">' + esc(options.note) + "</div>"; }
+        if (options.subNote) { html += '<div class="sub-note">' + esc(options.subNote) + "</div>"; }
+        return html + "</div>";
+      }
+
+      function metricTile(metric, scope) {
+        return tileHtml({
+          name: scope === "yesterday" ? metric.altLabel : metric.label,
+          value: metric.mapped ? pad(metric.count) : "—",
+          tone: metric.tone,
+          unmapped: !metric.mapped,
+          click: metric.mapped && metric.events.length ? scope + ":" + metric.key : "",
+          badgeLeft: metric.mapped ? "Non-ICMS " + pad(metric.nonIcms) : "",
+          badgeRight: metric.mapped ? "ICMS " + pad(metric.icms) : "",
+        });
+      }
+
+      function trainTile(day, scope) {
+        var train = day.train || {};
+        var note = "";
+        if (train.mapped) {
+          note = train.directionFound ? "UP " + train.up + " | DN " + train.dn : "Direction column not mapped";
+        }
+        return tileHtml({
+          name: "Total Train",
+          value: train.mapped ? train.total : "—",
+          tone: "blue",
+          unmapped: !train.mapped,
+          click: train.mapped ? scope + ":__train" : "",
+          note: note,
+          subNote: (train.makes || []).map(function (make) { return make.name + "-" + pad(make.count); }).join(", "),
+        });
+      }
+
+      function trainDrillHtml(day, scope) {
+        var train = day.train || {};
+        var html = '<div class="drill"><div class="drill-head"><h3>Total Train by OEM</h3>'
+          + '<div class="spacer"></div>'
+          + '<button class="link" data-close="' + esc(scope) + '" type="button">Close</button></div>'
+          + '<div class="chip" style="display:inline-block;margin-bottom:12px">'
+          + esc(day.display) + " | Trains: " + train.total + " | Unique locos: " + (train.uniqueLocos || 0) + "</div>";
+        if (!train.makeFound) {
+          html += '<div class="warn" style="margin-bottom:12px">No loco make column found, so everything is '
+            + 'grouped as UNSPECIFIED. Set KAVACH_REPORT_COLUMNS.make to the right letter.</div>';
+        }
+        if (!train.directionFound) {
+          html += '<div class="warn" style="margin-bottom:12px">No UP/DN column found and no UP/DN suffix on the '
+            + 'train or loco number. Set KAVACH_REPORT_COLUMNS.direction to the right letter.</div>';
+        }
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>OEM Make</th>'
+          + "<th>Trains</th><th>Loco count</th><th>UP</th><th>DN</th></tr></thead><tbody>";
+        (train.makes || []).forEach(function (make, index) {
+          html += '<tr><td class="num">' + (index + 1) + "</td><td>" + esc(make.name) + "</td><td>"
+            + make.count + "</td><td>" + make.locos + "</td><td>" + make.up + "</td><td>" + make.dn + "</td></tr>";
+        });
+        html += '<tr><td class="num"></td><td><strong>Total</strong></td><td><strong>' + train.total
+          + "</strong></td><td><strong>" + (train.uniqueLocos || 0) + "</strong></td><td><strong>"
+          + train.up + "</strong></td><td><strong>" + train.dn + "</strong></td></tr>";
+        return html + "</tbody></table></div></div>";
+      }
+
+      function availabilityTile(day, label) {
+        return tileHtml({
+          name: label,
+          value: day.availability || "—",
+          tone: "aqua",
+          good: Boolean(day.availability),
+          unmapped: !day.availability,
+        });
+      }
+
+      function drillHtml(day, scope) {
+        var key = OPEN[scope];
+        if (!key) { return ""; }
+        if (key === "__train") { return trainDrillHtml(day, scope); }
+        var metric = null;
+        day.metrics.forEach(function (item) { if (item.key === key) { metric = item; } });
+        if (!metric) { return ""; }
+        var html = '<div class="drill"><div class="drill-head"><h3>' + esc(metric.label) + "</h3>"
+          + '<div class="spacer"></div>'
+          + '<button class="link" data-close="' + esc(scope) + '" type="button">Close</button></div>'
+          + '<div class="chip" style="display:inline-block;margin-bottom:12px">'
+          + esc(day.display) + " | No. of " + esc(metric.label) + ": " + metric.count + "</div>";
+        if (!metric.events.length) {
+          return html + '<div class="empty">No entries for this date.</div></div>';
+        }
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th>';
+        metric.columns.forEach(function (column) { html += "<th>" + esc(column) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        metric.events.forEach(function (event, index) {
+          html += '<tr><td class="num">' + (index + 1) + "</td>";
+          event.cells.forEach(function (cell) { html += "<td>" + esc(cell) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function dayCard(day, scope, heading, dateChipLabel) {
+        var html = '<div class="card"><div class="card-head"><h2>' + esc(heading) + "</h2>"
+          + '<div class="spacer"></div>'
+          + '<span class="chip ghost">All Events</span>'
+          + '<span class="chip">' + esc(dateChipLabel) + "</span></div>";
+        if (!day.found) {
+          return html + '<div class="empty">No month sheet found for ' + esc(day.display)
+            + ". Expected a tab named like AUG-26.</div></div>";
+        }
+        html += '<div class="grid">' + trainTile(day, scope);
+        day.metrics.slice(0, 3).forEach(function (metric) { html += metricTile(metric, scope); });
+        day.metrics.slice(3).forEach(function (metric) { html += metricTile(metric, scope); });
+        html += availabilityTile(day, scope === "today" ? "Today Availability" : "Operational Availability");
+        html += "</div>";
+        if (scope === "yesterday" && DATA.extras && DATA.extras.length) {
+          html += '<div class="grid small">';
+          DATA.extras.forEach(function (tile) {
+            html += tileHtml({
+              name: tile.label,
+              value: tile.value === null ? "—" : tile.value,
+              tone: tile.tone,
+              plain: true,
+              unmapped: tile.value === null,
+            });
+          });
+          html += "</div>";
+        }
+        html += drillHtml(day, scope);
+        var unmapped = day.metrics.filter(function (metric) { return !metric.mapped; });
+        if (unmapped.length) {
+          html += '<div class="warn">Not mapped to a sheet section: '
+            + esc(unmapped.map(function (metric) { return metric.label; }).join(", "))
+            + '. Run "Kavach Dashboard &rsaquo; Show Header Map" in the sheet to see the section titles the script found.</div>';
+        }
+        return html + "</div>";
+      }
+
+      function summaryCard() {
+        if (SUMMARY_STATE === "loading") {
+          return '<div class="card"><div class="card-head"><h2>Operational Summary</h2></div>'
+            + '<div class="empty">Scanning every month sheet… this part can take a minute on the first load.</div></div>';
+        }
+        if (SUMMARY_STATE === "error") {
+          return '<div class="card"><div class="card-head"><h2>Operational Summary</h2>'
+            + '<div class="spacer"></div>'
+            + '<button class="link" id="retry-summary" type="button">Retry</button></div>'
+            + '<div class="warn">Could not build the all-months summary: ' + esc(SUMMARY) + "</div></div>";
+        }
+        var summary = SUMMARY || {};
+        var totals = summary.totals || [];
+        var html = '<div class="card"><div class="card-head"><h2>Operational Summary</h2>'
+          + '<div class="spacer"></div><span class="chip">' + esc(summary.monthSheets || 0) + " month sheets</span></div>"
+          + '<div class="grid">'
+          + tileHtml({ name: "Train Runs", value: (summary.trainRuns || 0).toLocaleString(), tone: "blue", plain: true, note: "UP + DN, all months" })
+          + tileHtml({ name: "Total Incidences", value: totals.reduce(function (sum, item) { return sum + item.count; }, 0).toLocaleString(), tone: "orange", plain: true, note: "all tracked sections" })
+          + tileHtml({ name: "ICMS", value: totals.reduce(function (sum, item) { return sum + item.icms; }, 0).toLocaleString(), tone: "violet", plain: true })
+          + tileHtml({ name: "Non-ICMS", value: totals.reduce(function (sum, item) { return sum + item.nonIcms; }, 0).toLocaleString(), tone: "aqua", plain: true })
+          + "</div>";
+
+        html += '</div><div class="card"><div class="card-head"><h2>Incidence Summary</h2>'
+          + '<div class="spacer"></div><span class="chip">' + esc(summary.generatedAt || "") + "</span></div>"
+          + '<div class="grid">';
+        totals.forEach(function (item) {
+          html += tileHtml({ name: item.label, value: (item.count || 0).toLocaleString(), tone: item.tone, plain: true });
+        });
+        html += "</div>";
+
+        if ((summary.topReasons || []).length) {
+          html += '<div class="reasons">';
+          summary.topReasons.slice(0, 3).forEach(function (entry) {
+            html += '<div class="reason" style="border-left-color: var(--' + esc(entry.tone) + ')">'
+              + '<div class="label">Top ' + esc(entry.label) + " Reason</div>"
+              + '<div class="text" style="color: var(--' + esc(entry.tone) + ')">' + esc(entry.reason) + "</div>"
+              + '<div class="meta">' + entry.count + " cases / " + entry.share + "%</div></div>";
+          });
+          html += "</div>";
+        }
+        return html + "</div>";
+      }
+
+      function rangeCard() {
+        if (!RANGE.from) { RANGE.from = DATA.yesterday.display; }
+        if (!RANGE.to) { RANGE.to = DATA.today.display; }
+        var html = '<div class="card"><div class="card-head"><h2>Date range summary</h2>'
+          + '<div class="spacer"></div><span class="chip">By OEM</span></div>'
+          + '<div class="btn-row">'
+          + '<label class="field"><span>From date</span>'
+          + '<input type="date" id="range-from" value="' + esc(RANGE.from) + '"></label>'
+          + '<label class="field"><span>To date</span>'
+          + '<input type="date" id="range-to" value="' + esc(RANGE.to) + '"></label>'
+          + '<button class="btn" id="range-generate" type="button" style="align-self:flex-end">Generate</button>';
+
+        if (RANGE.data) {
+          html += '<label class="field"><span>OEM / loco make</span><select id="range-make">'
+            + '<option value=""' + (RANGE.make ? "" : " selected") + '>All OEMs</option>';
+          RANGE.data.makes.forEach(function (make) {
+            html += '<option value="' + esc(make.name) + '"' + (RANGE.make === make.name ? " selected" : "") + ">"
+              + esc(make.name) + " (" + make.count + ")</option>";
+          });
+          html += "</select></label>";
+          if (DATA.webAppUrl) {
+            html += '<a class="btn download" style="align-self:flex-end" target="_blank" rel="noopener" href="'
+              + esc(DATA.webAppUrl) + "?action=csv&type=range&from=" + esc(RANGE.data.from)
+              + "&to=" + esc(RANGE.data.to) + "&make=" + encodeURIComponent(RANGE.make) + '">Download CSV</a>';
+          }
+        }
+        html += "</div>";
+
+        if (RANGE.state === "loading") {
+          return html + '<div class="empty">Reading the range…</div></div>';
+        }
+        if (RANGE.state === "error") {
+          return html + '<div class="warn">' + esc(RANGE.error) + "</div></div>";
+        }
+        if (!RANGE.data) {
+          return html + '<div class="empty">Pick a date range and press Generate.</div></div>';
+        }
+        var report = RANGE.data;
+        html += '<div class="chip" style="display:inline-block;margin-bottom:12px">'
+          + esc(report.from) + " to " + esc(report.to) + " | "
+          + esc(RANGE.make || "All OEMs") + " | tabs read: "
+          + esc(report.sheetsRead.join(", ") || "none") + "</div>";
+        if (!report.makeColumnFound) {
+          html += '<div class="warn" style="margin-bottom:12px">No loco make column found, so the OEM list is empty. '
+            + 'Set KAVACH_REPORT_COLUMNS.make to the right column letter.</div>';
+        }
+        (report.notes || []).forEach(function (note) {
+          html += '<div class="warn" style="margin-bottom:12px">' + esc(note) + "</div>";
+        });
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>Item</th>';
+        report.columns.forEach(function (column) { html += "<th>" + esc(column) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        report.rows.forEach(function (row) {
+          html += '<tr><td class="num">' + row.sno + "</td><td>" + esc(row.item) + "</td>";
+          row.values.forEach(function (value) { html += "<td>" + esc(value) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function loadRange() {
+        RANGE.state = "loading";
+        render();
+        google.script.run
+          .withSuccessHandler(function (result) {
+            RANGE.data = result;
+            RANGE.state = "ready";
+            render();
+          })
+          .withFailureHandler(function (error) {
+            RANGE.error = "Could not build the range summary: "
+              + (error && error.message ? error.message : error);
+            RANGE.state = "error";
+            render();
+          })
+          .kavachRangeReport({ from: RANGE.from, to: RANGE.to, make: RANGE.make });
+      }
+
+      function detailCard() {
+        if (!DETAIL.from) { DETAIL.from = DATA.yesterday.display; }
+        if (!DETAIL.to) { DETAIL.to = DATA.today.display; }
+        var types = [
+          { value: "mode", label: "Mode change" },
+          { value: "brake", label: "Brake application" },
+          { value: "both", label: "Brake application and Mode change" },
+          { value: "tag", label: "Tag Miss" },
+        ];
+        var html = '<div class="card"><div class="card-head"><h2>Additional Report</h2>'
+          + '<div class="spacer"></div><span class="chip">Row level</span></div>'
+          + '<div class="btn-row">'
+          + '<label class="field"><span>From date</span>'
+          + '<input type="date" id="detail-from" value="' + esc(DETAIL.from) + '"></label>'
+          + '<label class="field"><span>To date</span>'
+          + '<input type="date" id="detail-to" value="' + esc(DETAIL.to) + '"></label>'
+          + '<label class="field"><span>Report</span><select id="detail-report">';
+        types.forEach(function (type) {
+          html += '<option value="' + type.value + '"'
+            + (DETAIL.report === type.value ? " selected" : "") + ">" + esc(type.label) + "</option>";
+        });
+        html += "</select></label>";
+        if (DETAIL.report === "brake") {
+          var kinds = [
+            { value: "", label: "Both" },
+            { value: "undesirable", label: "Undesirable only" },
+            { value: "desirable", label: "Desirable only" },
+          ];
+          html += '<label class="field"><span>Brake type</span><select id="detail-kind">';
+          kinds.forEach(function (kind) {
+            html += '<option value="' + kind.value + '"'
+              + (DETAIL.brakeKind === kind.value ? " selected" : "") + ">" + esc(kind.label) + "</option>";
+          });
+          html += "</select></label>";
+        }
+        html += '<button class="btn" id="detail-generate" type="button" style="align-self:flex-end">Generate</button>';
+
+        if (DETAIL.data) {
+          html += '<label class="field"><span>OEM (ctrl-click for several)</span>'
+            + '<select id="detail-makes" multiple size="4" style="min-width:170px">'
+            + '<option value="__all"' + (DETAIL.makes.length ? "" : " selected") + ">All OEMs</option>";
+          DETAIL.data.makes.forEach(function (make) {
+            html += '<option value="' + esc(make.name) + '"'
+              + (DETAIL.makes.indexOf(make.name) >= 0 ? " selected" : "") + ">"
+              + esc(make.name) + " (" + make.count + ")</option>";
+          });
+          html += "</select></label>";
+          if (DATA.webAppUrl) {
+            html += '<a class="btn download" style="align-self:flex-end" target="_blank" rel="noopener" href="'
+              + esc(DATA.webAppUrl) + "?action=csv&type=detail&from=" + esc(DETAIL.data.from)
+              + "&to=" + esc(DETAIL.data.to) + "&report=" + esc(DETAIL.data.reportType)
+              + "&brakeKind=" + esc(DETAIL.data.brakeKind || "")
+              + "&makes=" + encodeURIComponent(DETAIL.makes.join(",")) + '">Download CSV</a>';
+          }
+        }
+        html += "</div>";
+
+        if (DETAIL.state === "loading") {
+          return html + '<div class="empty">Reading the range…</div></div>';
+        }
+        if (DETAIL.state === "error") {
+          return html + '<div class="warn">' + esc(DETAIL.error) + "</div></div>";
+        }
+        if (!DETAIL.data) {
+          return html + '<div class="empty">Pick a range and a report, then press Generate.</div></div>';
+        }
+
+        var report = DETAIL.data;
+        var visible = DETAIL.makes.length
+          ? report.rows.filter(function (row) { return DETAIL.makes.indexOf(row.make) >= 0; })
+          : report.rows;
+        var showMake = DETAIL.makes.length !== 1;
+        var keys = [];
+        var labels = [];
+        report.keys.forEach(function (key, index) {
+          if (key === "make" && !showMake) { return; }
+          keys.push(key);
+          labels.push(report.columns[index]);
+        });
+
+        html += '<div class="chip" style="display:inline-block;margin-bottom:12px">'
+          + esc(report.from) + " to " + esc(report.to) + " | " + esc(report.title) + " | "
+          + visible.length + " rows | " + esc(DETAIL.makes.join(", ") || "All OEMs") + "</div>";
+        if (report.truncated) {
+          html += '<div class="warn" style="margin-bottom:12px">Stopped at '
+            + report.rows.length + ' rows. Narrow the date range for the full set.</div>';
+        }
+        if (report.unmapped.length) {
+          html += '<div class="warn" style="margin-bottom:12px">No column set yet for: '
+            + esc(report.unmapped.join(", ")) + ' - those cells stay blank.</div>';
+        }
+        if (!visible.length) {
+          return html + '<div class="empty">No events in this range.</div></div>';
+        }
+
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th>';
+        labels.forEach(function (label) { html += "<th>" + esc(label) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        visible.forEach(function (row, index) {
+          html += '<tr><td class="num">' + (index + 1) + "</td>";
+          keys.forEach(function (key) { html += "<td>" + esc(row[key]) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function loadDetail() {
+        DETAIL.state = "loading";
+        render();
+        google.script.run
+          .withSuccessHandler(function (result) {
+            DETAIL.data = result;
+            DETAIL.state = "ready";
+            render();
+          })
+          .withFailureHandler(function (error) {
+            DETAIL.error = "Could not build the report: "
+              + (error && error.message ? error.message : error);
+            DETAIL.state = "error";
+            render();
+          })
+          .kavachDetailReport({
+            from: DETAIL.from,
+            to: DETAIL.to,
+            report: DETAIL.report,
+            brakeKind: DETAIL.report === "brake" ? DETAIL.brakeKind : "",
+            makes: [],
+          });
+      }
+
+      function reportCard() {
+        var html = '<div class="card"><div class="card-head"><h2>Download reports</h2>'
+          + '<div class="spacer"></div><span class="chip">Month-wise</span></div>'
+          + '<div class="btn-row">'
+          + '<button class="btn" id="report-modeChange" type="button" aria-pressed="'
+          + (REPORT_TYPE === "modeChange") + '">Mode change status</button>'
+          + '<button class="btn" id="report-summary" type="button" aria-pressed="'
+          + (REPORT_TYPE === "summary") + '">Summary</button>';
+        if (REPORT_STATE === "ready" && DATA.webAppUrl) {
+          html += '<a class="btn download" href="' + esc(DATA.webAppUrl) + "?action=csv&type="
+            + esc(REPORT_TYPE) + '" target="_blank" rel="noopener">Download CSV</a>';
+        }
+        html += "</div>";
+        if (REPORT_STATE === "idle") {
+          return html + '<div class="empty">Pick a report to build it from every month sheet.</div></div>';
+        }
+        if (REPORT_STATE === "loading") {
+          return html + '<div class="empty">Building the report…</div></div>';
+        }
+        if (REPORT_STATE === "error") {
+          return html + '<div class="warn">' + esc(REPORT) + "</div></div>";
+        }
+        (REPORT.notes || []).forEach(function (note) {
+          html += '<div class="warn" style="margin-bottom:12px">' + esc(note) + "</div>";
+        });
+        html += '<div class="table-scroll"><table><thead><tr><th class="num">S.No</th><th>Item</th>';
+        REPORT.columns.forEach(function (column) { html += "<th>" + esc(column) + "</th>"; });
+        html += "</tr></thead><tbody>";
+        REPORT.rows.forEach(function (row) {
+          html += '<tr><td class="num">' + row.sno + "</td><td>" + esc(row.item) + "</td>";
+          row.values.forEach(function (value) { html += "<td>" + esc(value) + "</td>"; });
+          html += "</tr>";
+        });
+        return html + "</tbody></table></div></div>";
+      }
+
+      function loadReport(type) {
+        REPORT_TYPE = type;
+        REPORT_STATE = "loading";
+        var ticket = Date.now();
+        REPORT_TICKET = ticket;
+        render();
+        setTimeout(function () {
+          if (REPORT_TICKET === ticket && REPORT_STATE === "loading") {
+            REPORT = "The report is still running after 3 minutes. Open the Apps Script editor, "
+              + "check Executions for kavachReportData, and send me the error shown there.";
+            REPORT_STATE = "error";
+            render();
+          }
+        }, 180000);
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (REPORT_TICKET !== ticket) { return; }
+            REPORT = result;
+            REPORT_STATE = "ready";
+            render();
+          })
+          .withFailureHandler(function (error) {
+            if (REPORT_TICKET !== ticket) { return; }
+            REPORT = "Could not build the report: " + (error && error.message ? error.message : error);
+            REPORT_STATE = "error";
+            render();
+          })
+          .kavachReportData(type);
+      }
+
+      function render() {
+        el("title").textContent = DATA.title;
+        el("subtitle").textContent = DATA.subtitle;
+        el("live").textContent = "Live - " + DATA.liveLabel;
+        if (DATA.webAppUrl) {
+          el("setup-link").href = DATA.webAppUrl + "?page=setup";
+        }
+        el("root").innerHTML =
+          dayCard(DATA.today, "today", "Today Status", "Today " + DATA.today.display)
+          + dayCard(DATA.yesterday, "yesterday", "Yesterday Position", "Date: " + DATA.yesterday.display)
+          + summaryCard()
+          + rangeCard()
+          + detailCard()
+          + reportCard();
+
+        Array.prototype.forEach.call(document.querySelectorAll("[data-open]"), function (node) {
+          node.addEventListener("click", function () {
+            var parts = node.getAttribute("data-open").split(":");
+            OPEN[parts[0]] = OPEN[parts[0]] === parts[1] ? "" : parts[1];
+            render();
+          });
+        });
+        Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function (node) {
+          node.addEventListener("click", function () {
+            OPEN[node.getAttribute("data-close")] = "";
+            render();
+          });
+        });
+        var retry = el("retry-summary");
+        if (retry) {
+          retry.addEventListener("click", function () { loadSummary(true); });
+        }
+        var fromInput = el("range-from");
+        var toInput = el("range-to");
+        if (fromInput) {
+          fromInput.addEventListener("change", function () { RANGE.from = fromInput.value; });
+        }
+        if (toInput) {
+          toInput.addEventListener("change", function () { RANGE.to = toInput.value; });
+        }
+        var generate = el("range-generate");
+        if (generate) {
+          generate.addEventListener("click", function () {
+            if (fromInput) { RANGE.from = fromInput.value; }
+            if (toInput) { RANGE.to = toInput.value; }
+            if (!RANGE.from || !RANGE.to) {
+              RANGE.error = "Pick both a from and a to date.";
+              RANGE.state = "error";
+              render();
+              return;
+            }
+            RANGE.make = "";
+            loadRange();
+          });
+        }
+        var makeSelect = el("range-make");
+        if (makeSelect) {
+          makeSelect.addEventListener("change", function () {
+            RANGE.make = makeSelect.value;
+            loadRange();
+          });
+        }
+        var detailFrom = el("detail-from");
+        var detailTo = el("detail-to");
+        var detailReport = el("detail-report");
+        var detailKind = el("detail-kind");
+        if (detailKind) {
+          detailKind.addEventListener("change", function () { DETAIL.brakeKind = detailKind.value; });
+        }
+        if (detailReport) {
+          /* The brake-type dropdown only exists for Brake application, so the
+             card has to re-render when the report changes. */
+          detailReport.addEventListener("change", function () {
+            if (detailFrom) { DETAIL.from = detailFrom.value; }
+            if (detailTo) { DETAIL.to = detailTo.value; }
+            DETAIL.report = detailReport.value;
+            render();
+          });
+        }
+        var detailGenerate = el("detail-generate");
+        if (detailGenerate) {
+          detailGenerate.addEventListener("click", function () {
+            if (detailFrom) { DETAIL.from = detailFrom.value; }
+            if (detailTo) { DETAIL.to = detailTo.value; }
+            if (detailReport) { DETAIL.report = detailReport.value; }
+            if (detailKind) { DETAIL.brakeKind = detailKind.value; }
+            if (!DETAIL.from || !DETAIL.to) {
+              DETAIL.error = "Pick both a from and a to date.";
+              DETAIL.state = "error";
+              render();
+              return;
+            }
+            DETAIL.makes = [];
+            loadDetail();
+          });
+        }
+        var detailMakes = el("detail-makes");
+        if (detailMakes) {
+          detailMakes.addEventListener("change", function () {
+            var picked = Array.prototype.slice.call(detailMakes.selectedOptions).map(function (option) {
+              return option.value;
+            });
+            /* "All OEMs" wins over anything else picked alongside it. */
+            DETAIL.makes = picked.indexOf("__all") >= 0 ? [] : picked;
+            render();
+          });
+        }
+        ["modeChange", "summary"].forEach(function (type) {
+          var button = el("report-" + type);
+          if (button) {
+            button.addEventListener("click", function () { loadReport(type); });
+          }
+        });
+      }
+
+      function loadDay(refresh) {
+        el("refresh").disabled = true;
+        if (!DATA) {
+          el("root").innerHTML = '<div class="card"><div class="loading">Reading the spreadsheet…</div></div>';
+          setTimeout(function () {
+            if (!DATA) {
+              el("root").innerHTML = '<div class="card"><div class="warn">Still waiting on the spreadsheet after 90 seconds. '
+                + 'Open the Apps Script editor and check Executions for the failing run, then reload this page.</div></div>';
+            }
+          }, 90000);
+        }
+        google.script.run
+          .withSuccessHandler(function (result) {
+            DATA = result;
+            el("refresh").disabled = false;
+            render();
+            loadSummary(refresh);
+          })
+          .withFailureHandler(function (error) {
+            el("refresh").disabled = false;
+            el("root").innerHTML = '<div class="card"><div class="empty">Could not load data: '
+              + esc(error && error.message ? error.message : error) + "</div></div>";
+          })
+          .kavachDayData({});
+      }
+
+      function loadSummary(refresh) {
+        SUMMARY_STATE = "loading";
+        if (DATA) { render(); }
+        setTimeout(function () {
+          if (SUMMARY_STATE === "loading") {
+            SUMMARY = "The all-months scan is still running after 3 minutes. Open the Apps Script editor, "
+              + "check Executions for kavachSummaryData, and send me the error shown there.";
+            SUMMARY_STATE = "error";
+            render();
+          }
+        }, 180000);
+        google.script.run
+          .withSuccessHandler(function (result) {
+            SUMMARY = result;
+            SUMMARY_STATE = "ready";
+            render();
+          })
+          .withFailureHandler(function (error) {
+            SUMMARY = error && error.message ? error.message : String(error);
+            SUMMARY_STATE = "error";
+            render();
+          })
+          .kavachSummaryData({ refresh: Boolean(refresh) });
+      }
+
+      el("refresh").addEventListener("click", function () { loadDay(true); });
+      loadDay(false);
+    </script>
+  </body>
+</html>
